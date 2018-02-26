@@ -9,8 +9,7 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 ## Instructions
-
-This final is to be done in your groups.  Only one document is needed per group.  Some questions require code, and the analysis of data, some questions check the concepts that we have discussed in this course.  There are a total of 5 questions on this final.  Please submit your .Rmd and word/pdf document via e campus.  The due date will be announced on e campus and via email.  
+**This final is to be done in your groups.  Only one document is needed per group.  Some questions require code, and the analysis of data, some questions check the concepts that we have discussed in this course.  There are a total of 5 questions on this final.  Please submit your .Rmd and word/pdf document via e campus.  The due date will be announced on e campus and via email.**
 
 ### Problem 1 (20 points)
 **In your own words address the following questions about maximum likelihood estimation.  What is maximum likelihood estimation?  What is the procedure for finding the maximum likelihood estimates?  Is there a relationship between the ordinary least squares estimates and generalized linear models that is based on maximum likelihood estimation?  If so give insights on that relationship.**
@@ -132,6 +131,7 @@ The model that we fit was able to predict 571 out of the 753 times (75%) correct
 Age, lwg, and income were significant as well, but these trends were non-linear and so they lose simple interpretability.  To compensate for this, they are plotted individually below, but using the GAM of the model.
 
 ```{r}
+library(faraway)
 #Overview
 plot(modLFP4, residuals=T, pch=19, cex=0.75,scheme=1, col=3 , shade=T, shade.col='gray')
 
@@ -171,8 +171,8 @@ These plots help to visualize the non-linear trends within the model by breaking
 **In the `mlogit` package there is a data set called `Fishing`.  This data depicts a customer choice model of different recreational fishing choices.  This is based on price, how many fish are caught, and income.   Create a model based on price, catch, and inocme, that tells me about a customers choice of mode.  Describe how you arrived at your model and any insights it provides.**
 
 ```{r echo = FALSE, warning = FALSE, message = FALSE}
-install.packages("mlogit")
-install.packages("stargazer")
+#install.packages("mlogit")
+#install.packages("stargazer")
 
 library(mlogit); library(tidyr); library(dplyr); library(stargazer)
 
@@ -288,8 +288,8 @@ apply(fitted(m3, outcome = FALSE), 2, mean)
 We will now try a multinomial logit model using the multinom() function
 
 ```{r}
-m4 <- multinom(mode ~ price + catch + income, fish_long)
-summary(m4)
+#m4 <- multinom(mode ~ price + catch + income, fish_long)
+#summary(m4)
 ```
 
 
