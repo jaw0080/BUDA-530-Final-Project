@@ -1,13 +1,293 @@
-Version: 1.0
+---
+title: "BUDA 530 Final_JW_SB_IW"
+author: "Jordon Wolfram, Ivonne Wardell, and Scott Branham"
+date: "February 24, 2018"
+output: html_document
+---
 
-RestoreWorkspace: Default
-SaveWorkspace: Default
-AlwaysSaveHistory: Default
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+## Instructions
 
-EnableCodeIndexing: Yes
-UseSpacesForTab: Yes
-NumSpacesForTab: 2
-Encoding: UTF-8
+This final is to be done in your groups.  Only one document is needed per group.  Some questions require code, and the analysis of data, some questions check the concepts that we have discussed in this course.  There are a total of 5 questions on this final.  Please submit your .Rmd and word/pdf document via e campus.  The due date will be announced on e campus and via email.  
 
-RnwWeave: Sweave
-LaTeX: pdfLaTeX
+### Problem 1 (20 points)
+**In your own words address the following questions about maximum likelihood estimation.  What is maximum likelihood estimation?  What is the procedure for finding the maximum likelihood estimates?  Is there a relationship between the ordinary least squares estimates and generalized linear models that is based on maximum likelihood estimation?  If so give insights on that relationship.**
+
+
+
+Maximum likelihood has been at the foundation of this BUDA530 class.  The data that were are looking at is essentially random variables and we have to review this as data analyists and be able to quantify the randomness.  Maximum likelihood estimator (MLE) is useful in finding the likelihood of the parameter given the data that will best allows us to model or fit it.  This is optimized by finding the ideal \theta value that "maximizes" the closeness.
+
+One standard practice in MLE is using the log likelihood.  It is still looking for the MLE, but log functionality surpresses the data into a form that can identify the denity within the data better.  As this affects the results of the y and the x axis in ratio, it is mathmatically allowable, although when interpreting coefficients, it should be considered that the results may need to be transformed back before being interpreted.  Finding the MLE can be done using calculus on simple data as we showed in HW1, but with more complex data, we generally use computing methods to find this.
+
+Ordinary Least Squares (OLS), Generalized Linear Models (GLM) and MLE are related to each other.  To understand the relationship, I would add one more term, "Linear Regression".  OLS finds the estimator using linear regression parameters that are unbiased and chooses this by minimizing the sum of the squares.  It is fitting the existing data as well as it can on a simple line.  Because of this, OLS operates best when all of the data is available and interprets from that.  The function lm() utilizes this and it is very prevelent.
+
+GLMs, on the other hand, can use non-normal data which is important for binonmials, Poisson, and more options that we have used.  While it can handle normal data, it can also break away from the norm when needed by using MLE methodology as its regression parameter.  Unlike OLS, MLE is finding the parameter that maximizes the probability of matching the sample data.  The "link" inside of the glm() function defaults to "logit" for the advantages about using log likelihood that were discussed already.
+
+Linear Regression and OLS go together in the same way that GLM and MLE go together.  OLS and MLE are methods for fitting data best through linear modelling.  This relationship can be specifically seen in that if the actual data has a normal distribution around the mean, then mathmatically, MLE = OLS.  When data is not normal, it becomes important to understandthe differences between the two for choosing the methodology that will allow you to model the data best.
+
+
+
+### Problem 2 (20 points)
+**Here are some  common problem occurring in industry right now.  Part of your education is to be able to analyze data, but also start to think about the type of analysis needed to answer the question. Most of your clients will never see what happens behind the scenes but they will be impacted by the results. As much as we would like it, most stakeholders don't know the analysis needed they just know the question they need an answer too.  Below I'm going to describe 2 scenarios.  Suggest the type of analysis/model you would used based on the methods you learned in this course.  Give justification for your selection.**
+
+**A company that offers lines of credit (think bank or credit cards) is interested in the risk associated with their customers.  There are many different ways to view this, but they plan to use this information to offer better rates, or make offers to new customers based on information they have on these customers.  The information available is income, employment history, home ownership, "some" credit history, and current credit liability for a credit report.  We have credit score, but are looking to supplement it with our own metric and recommendations.  We believe that using credit score only may be too restrictive to customers who will pay appropriately.  We are actively looking at the risk associated with these lines of credit.   For right now these loans are for a fixed credit limit.**
+
+####Scenario 1  
+**One stakeholder is interested in different levels of risk of default/non-payment.  They have provided information on 6 levels of risk, of every individual for their opinion and would like you to create a model based on this.  The 6 levels of risk, are "extremely low risk", "low risk", "moderate risk", "high risk", and "extremely high risk".  They ask you to find relevant predictors for this metric and report a model they can use in an automated procedure to provide these recommendations on top of what they already have.  Recommend a statistical model that you can use and how you would evaluate this model relative to customer needs.  Are there issues with the method you've proposed?  How can you explain this to your client?**
+
+•	My initial thought was ordinal regression, but I am unsure if this scenario fits the definition: “used for a variable whose value exists on an arbitrary scale where only the relative ordering between different values is significant”
+1)	Does the risk scale seem arbitrary or more well-defined?
+2)	Is the ordering more than just relative (I might be overthinking this)
+•	GLM may be a better fit here, but I’m honestly not sure. To me it depends on:
+1)	Can we firmly establish a relationship between the mean and variance at each risk level?
+2)	If so, I lean towards Poisson for this scenario if – and only if – we can treat “events” as equal regardless of level of risk, i.e. moderate risk and high risk have the same weight in the model. If not we would have to determine a proper weighting before creating the Poisson distribution. 
+
+
+####Scenario 2  
+**Another stakeholder is interested in only defaults.  Since credit is offered to those who the company deems appropriate to offer credit to there is a certain "filter" on who will default.  Basically defaults become a "rare" occurrence, but we still want to be able to predict.  The data the company provides shows a 15% default rate, which they deem acceptable, but they want to see if they can identify contributory factors to defaults.  Prediction at an individual level is done through another means.  They want you to develop a statistical model that can identify the number of defaults that can occur in a specific month.  They also suggest there could be a time effect (month may matter) and number of defaults the previous month may matter as well.  Explain the model you would try to implement and why it makes sense.  How would you evaluate this model and method?  What are the issues that can arise with your approach?  How would you explain this to your client?**
+
+•	Two Phase Approach
+1)	Default / non-payment makes me think binomial regression and distribution model is the way to go. There are really only two possible outcomes of the variable (did the customer default on their payment or not?) based on the 6 independent variables mentioned in the scenario
+	We could run models and look at the Log Odds ratios to determine initial variability, then conduct inference and model testing to check the overall deviance levels
+	The end product would be an overall risk matrix that lists the dependent and independent variables, then shows a decision on whether we recommend issuing credit to a particular customer
+2)	Time Series Analysis
+	Utilize the ARMA model to look for default instances that may be one-time default occurrences, seasonality (e.g. somebody misses a payment during the holiday season), or other activity
+	Create an ARIMA model to determine if there is an overall trend in financial activities by customer to determine risk and utilize autocorrelation within that model 
+	The end product would be a confidence model that defines thresholds of risk based on what we see over time and recommends a go / no-go decision to the stakeholder
+	Reference financial data plot from TSAR document (pg. 7)
+
+
+
+### Problem 3 (20 points)
+**In this course we've discussed generalized linear models, time series analysis, the non-linear models.  In your own words and in less than a page describe how these three concepts are relate to one another?  If there is no relationship between these methods explain why they are not connected?**
+
+Generalized Linear Models (GLMs) – is a flexible generalization of ordinary linear regression that allows for response variables that have error distribution models other than a normal distribution. The GLM generalizes linear regression by allowing the linear model to be related to the response variable via a link function and by allowing the magnitude of the variance of each measurement to be a function of its predicted value…including something about Poisson and maybe count regression….log odds ratio should be mentioned. IF IT’S A YES OR NO QUESTION, THEN YOU WOULD WANT TO USE THIS.
+Time Series Analysis –Time series analysis comprises methods for analyzing time series data in order to extract meaningful statistics and other characteristics of the data. Time series forecasting is the use of a model to predict future values based on previously observed values. While regression analysis is often employed in such a way as to test theories that the current values of one or more independent time series affect the current value of another time series, this type of analysis of time series is not called "time series analysis", which focuses on comparing values of a single time series or multiple dependent time series at different points in time. Interrupted time series analysis is the analysis of interventions on a single time series.
+We want to predict what our "profits/usage/churn/insert favorite buzzword/metric here" will be next month, based on historic trends and information we have.  That's a question anyone who has worked on the business side of things has herd.  In academics we're interested in predicting enrollments, and the amount of financial aid we give out.  We're interested in how many people will donate money to the university, how many people will attend athletic events, and many more questions.  On the research side of things we have people who are interested in predicting number of users who will enter a system, the capacity of a system as it scales based on "empirical evidence".  The idea is we want to predict something where time is a factor and we haven't witnessed what is occurring.  Basically we want to predict something that we have 0 data to base an opinion on.  At the begging of BUDA 525 we discussed about predicting and doing inference within the bounds of our data, forecasting is what we do when we move outside of that, when time is our dependent variable.  
+Time Series – This module focuses on giving students a basic introduction to Time Series Analysis, specifically focusing on ARIMA and ARMA models. The idea is that forecasting plays a major role in business decisions, and students should understand the time components that play a factor and how it can play a factor in these models. 
+We worry about time series decompositions, which worry about seasonality and trend. THIS IS ALL ABOUT FORECASTING. If you’re trying to predict something in the future, you have to make the assumption that the trend stays the same over the known time period. 
+Time series analysis provides a basic framework to pick up time/seasonal dependent trends and ideas.  We're going to use a few different data sets, some will be business related and some won't be.  Remember anything is a business problem in the right context, for instance why would estimating the number of hits of a website be a business problem?  Simple, do your servers scale?  Why would estimating the number of employees who read a newsletter matter?  It tells you about dissemination of information across your company.  What this is here to do is show you how the methods can be used to detect trends and access information.  
+Non Linear Models – 
+In statistics, nonlinear regression is a form of regression analysis in which observational data are modeled by a function which is a nonlinear combination of the model parameters and depends on one or more independent variables. The data are fitted by a method of successive approximations.
+
+
+### Problem 4 (20 points)
+**In this problem we want to study the labor participation of women in the 1980's.  The `Mroz` data in the `car`package depicts labor force participation.  Look at the help file for definition of the variables.  We are going to use `lfp` as our response in this case.  Create and decide on a model (you need to fit a few), that models this, discuss relevant variables and the impact they have.  You can use lwg in your model as it depicts what income would be expected if that individual worked. At least one of your models must, use splines or non-linear terms.**  
+
+Start by reviewing the variables for the 753 observations of data.
+```{r}
+library(car)
+library(splines)
+library(mgcv)
+data("Mroz")
+head(Mroz)
+help(Mroz) #help define the data
+summary(Mroz) #overview of the data
+sapply(Mroz, class) #see the variables classes
+```
+There are 325 observations where married women were not in the labor force and 428 observations where they were.  The response in our model is going to be a factor of "yes" or "no" for lfp.  The data is quite tidy and does not have "NA" values that need to be worked around.  Now we need to build a non-linear model that can consider the variables and make a prediction about whether lfp will be "yes" or "no"
+
+
+###Build and hone basic models
+```{r}
+##start by looking at a linear model with a binomial response
+modLFP1 <- glm(lfp ~ k5 + k618 + age + wc + hc + lwg + inc, data = Mroz, family = binomial(link = "logit"))
+
+#now the non-linear, starting with polynomials:
+##I tried all of the numeric values to different degrees of polynomials and used AIC to judge fit.  The model below has the best polynomial results that I could put together
+modLFP2 <- glm(lfp ~ poly(k5,1,raw=FALSE) + poly(k618,1,raw=FALSE) + poly(age,1,raw=FALSE) + wc + hc + poly(lwg,2,raw=FALSE) + poly(inc,2,raw=FALSE), data = Mroz, family = binomial(link = "logit"))
+
+#now compare each variable with a spline instead to see what can be improved.  Overall the splines improved the fit from the linear model, but not quite as well as the polynomial did.  One again, many variations of the split model below were tried before choosing this one.
+modLFP3 <- glm(lfp ~ k5 + k618 + age + wc + hc + bs(lwg, knots =1)  + bs(inc,knots = c(25,50,75)), data = Mroz, family = binomial(link = "logit"))
+
+#create a GAM.  By adjusting the values of this and reviewing the AIC, the model below fit best.
+modLFP4 <- gam(lfp ~ k5 + k618 + s(age) + wc + hc + s(lwg) + s(inc), data = Mroz, family = binomial(link = "logit"))
+
+
+
+AIC(modLFP1,modLFP2, modLFP3, modLFP4)
+summary(modLFP4)
+```
+
+
+Predict using the model and review how well it predicts the lfp.
+```{r}
+predLFP <-predict(modLFP4,type="response", newdata=Mroz)
+predLFP1 <- ifelse(predLFP>=0.5, "Yes", "No")
+
+table(predLFP1) #what the model predicts
+table(predLFP1,Mroz$lfp) #This will show how many times the model predicted right against the actual data.
+
+correctPreds <- as.numeric(length(predLFP1)) - (sum(table(predLFP1,Mroz$lfp))-sum(diag(table(predLFP1,Mroz$lfp)))) #How many predictions are correct
+print(correctPreds)
+
+print(correctPreds / length(predLFP1)) 
+
+```
+
+The model that we fit was able to predict 571 out of the 753 times (75%) correctly whether a married woman within this survey would be part of the labor force.  From the summary, it is important to review the coefficients of the variables.  K618 (how many children 6-18 years old) and whether or not either gender went to college was not found to be significant within the model.  K5 (how many children 5 years old or younger) was significant in the model with a linear trend interfering the higher number of children in this age bracket make it less likely for a woman to be in the workforce.
+
+Age, lwg, and income were significant as well, but these trends were non-linear and so they lose simple interpretability.  To compensate for this, they are plotted individually below, but using the GAM of the model.
+
+```{r}
+#Overview
+plot(modLFP4, residuals=T, pch=19, cex=0.75,scheme=1, col=3 , shade=T, shade.col='gray')
+
+#Plot model for age
+modLFPAge <- gam(lfp ~ s(age), data = Mroz, family = binomial(link = "logit"))
+plot(predLFP~age,data = Mroz)
+x <-seq(30,60,1)
+lines(x,ilogit(predict(modLFPAge,newdata=data.frame(age=x))),col=2)
+
+
+#Plot model for lwg
+modLFPLwg <- gam(lfp ~ s(lwg), data = Mroz, family = binomial(link = "logit"))
+plot(predLFP~lwg,data = Mroz)
+x <-seq(0,2.4,0.1)
+lines(x,ilogit(predict(modLFPLwg,newdata=data.frame(lwg=x))),col=2)
+
+
+#Plot model for inc
+modLFPInc <- gam(lfp ~ s(inc), data = Mroz, family = binomial(link = "logit"))
+plot(predLFP~inc,data = Mroz)
+x <-seq(0,60,1) #not using full data range as it becomes too sparse
+lines(x,ilogit(predict(modLFPInc,newdata=data.frame(inc=x))),col=2)
+```
+
+
+These plots help to visualize the non-linear trends within the model by breaking down the response trend based on a single variable.
+-Age stays pretty  steady from 30 to 40 and then it starts to become less likely that the the married woman will participate in the workforce as their age increases
+-Lwg is hard to interpret but appears participatants in the survey with "average" levels of income potential were less likely to work.
+-Inc shows that as the family income increases, the likelyhood of participating in the workforce decreases.
+
+
+
+
+### Problem 5 (20 points)
+**In the `mlogit` package there is a data set called `Fishing`.  This data depicts a customer choice model of different recreational fishing choices.  This is based on price, how many fish are caught, and income.   Create a model based on price, catch, and inocme, that tells me about a customers choice of mode.  Describe how you arrived at your model and any insights it provides.**
+
+```{r echo = FALSE, warning = FALSE, message = FALSE}
+install.packages("mlogit")
+install.packages("stargazer")
+
+library(mlogit); library(tidyr); library(dplyr); library(stargazer)
+
+```
+
+
+
+```{r}
+?Fishing
+
+data("Fishing")
+head(Fishing)
+```
+ 
+This problem requires us to classify the mode of recreational fishing given the predictor variables. We have 4 choices for modes of recreation fishing: beach, pier, boat and charter (the choice); 2 alternative variables: price and catch rate for each mode (these are the alternatives); and income which indicates each individual's monthly income.  
+
+We check the choices (dependent variable). Charter has the highest number of individuals. 
+```{r}
+#check the dependent variable
+table(Fishing$mode)
+```
+
+The data is in `wide` format, to use the mlogit function we first need to convert it into a `long` format
+```{r}
+fish_long <- mlogit.data(Fishing, shape = "wide", varying = 2:9, choice = "mode")
+head(fish_long, 20)
+```
+```{r}
+#start with the price and catch predictors and without the intercepts
+m <- mlogit(mode ~ price + catch | 0, fish_long)
+
+#model summary
+summary(m)
+```
+The coefficient for price is negative, meaning that as the cost of the choice goes up keeping the catch rate the same, the probability of selecting the mode goes down. The coefficient for catch is positive indicating that as the rate of catch goes up, with price remaining constant, the probability of selecting that mode goes up. 
+
+Both coefficients are significant with `p-value` being much smaller than 0.05
+
+We compare the frequencies of the actual alternatives with frequency of model estimates:
+```{r}
+#calculate and extract both frequencies
+freq_actual <- m$freq/sum(m$freq)
+freq_model <- apply(fitted(m, outcome=FALSE), 2, mean)
+
+#rbind
+rbind(freq_actual, freq_model)
+```
+The model predictions are not too far off from the actual frequencies of mode. The model also correctly predicted that `boat` and `charter` are the most selected choices although the model predicts that `boat` is more popular than `charter` which is not the case for actuals. 
+
+
+```{r}
+#calculate the ratio of coefficients 
+coef(m)["catch"]/coef(m)["price"]
+```
+The ratio of catch to price coefficient indicates that everything else being the same, individuals are willing to forgo 47% of the catch rate for a 1 unit reduction of mode price. This seems somewhat high but is likely since we have not taken into account the income of the individual. 
+
+We then add the intercepts
+
+```{r}
+#start with the price and catch predictors and without the intercepts
+m1 <- mlogit(mode ~ price + catch, fish_long)
+
+#model summary
+summary(m1)
+```
+```{r}
+#calculate and extract both frequencies
+freq_model_m1 <- apply(fitted(m1, outcome=FALSE), 2, mean)
+
+#rbind
+rbind(freq_actual, freq_model_m1)
+```
+
+We see that the frequencies match exactly 
+
+```{r}
+#calculate the ratio of coefficients 
+coef(m1)["catch"]/coef(m1)["price"]
+```
+The ratio of catch to price coefficient indicates that everything else being the same, individuals are willing to forgo 15% of the catch rate for a 1 unit reduction of mode price. This looks more reasonable than the previous estimate of 47%
+
+We will now add the income to the model. We will create 2 models: one with cost/income to model the fact that higher income individuals are less concerned with higher prices and vice-versa; and one with income effects on the alternatives 
+```{r}
+#model for cost/income 
+m2 <- mlogit(mode ~ price + catch + I(price/income), fish_long)
+summary(m2)
+```
+```{r}
+#model for income specific effects 
+m3 <- mlogit(mode ~ price + catch | income, fish_long)
+summary(m3)
+```
+
+The model with price/income was worse than our previous model where income was not taken into account even though the price/income is highly significant. The income specific model is an improvement and suggests that as income goes up the probability of boat choice goes up relative to the other alternatives. Also as income goes up the probability of the other choices goes down. The income terms are not significant indicating that monthly income doesn't have an effect on the choices of mode. This may be due to the fact that individuals may save portion of their income for recreational fishing regardless of how much monthly income they make. 
+
+We compare the models
+```{r}
+#likelihood test 
+lrtest(m3, m1)
+
+#Wald test 
+waldtest(m3, m1)
+
+#score test 
+scoretest(m3, m1)
+```
+All tests indicate that we should use the model with the income effect. 
+
+```{r}
+apply(fitted(m3, outcome = FALSE), 2, mean)
+```
+
+We will now try a multinomial logit model using the multinom() function
+
+```{r}
+m4 <- multinom(mode ~ price + catch + income, fish_long)
+summary(m4)
+```
+
+
