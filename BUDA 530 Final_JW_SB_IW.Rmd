@@ -15,16 +15,15 @@ knitr::opts_chunk$set(echo = TRUE)
 **In your own words address the following questions about maximum likelihood estimation.  What is maximum likelihood estimation?  What is the procedure for finding the maximum likelihood estimates?  Is there a relationship between the ordinary least squares estimates and generalized linear models that is based on maximum likelihood estimation?  If so give insights on that relationship.**
 
 
+Maximum likelihood has been at the foundation of this BUDA530 class.  The data that were are looking at is essentially random variables and we have to review this as data analyists and be able to quantify the randomness.  Maximum likelihood estimator (MLE) is a useful tool in finding the likelihood of the parameter given the data that will best allow us to model or fit it.  This is optimized by finding the ideal \theta value that "maximizes" the closeness.
 
-Maximum likelihood has been at the foundation of this BUDA530 class.  The data that were are looking at is essentially random variables and we have to review this as data analyists and be able to quantify the randomness.  Maximum likelihood estimator (MLE) is useful in finding the likelihood of the parameter given the data that will best allows us to model or fit it.  This is optimized by finding the ideal \theta value that "maximizes" the closeness.
+One standard practice in MLE is using the log likelihood.  It is still looking for the MLE, but log functionality surpresses the data into a form that can identify the density within the data better.  As this affects the results of the predictor and response variables in ratio, it is mathmatically allowable, although when interpreting coefficients, it should be considered that the results may need to be transformed back before being interpreted.  Finding the MLE can be done using calculus on simple data as we showed in HW1, but with more complex data, we generally use computing methods to find this.
 
-One standard practice in MLE is using the log likelihood.  It is still looking for the MLE, but log functionality surpresses the data into a form that can identify the denity within the data better.  As this affects the results of the y and the x axis in ratio, it is mathmatically allowable, although when interpreting coefficients, it should be considered that the results may need to be transformed back before being interpreted.  Finding the MLE can be done using calculus on simple data as we showed in HW1, but with more complex data, we generally use computing methods to find this.
-
-Ordinary Least Squares (OLS), Generalized Linear Models (GLM) and MLE are related to each other.  To understand the relationship, I would add one more term, "Linear Regression".  OLS finds the estimator using linear regression parameters that are unbiased and chooses this by minimizing the sum of the squares.  It is fitting the existing data as well as it can on a simple line.  Because of this, OLS operates best when all of the data is available and interprets from that.  The function lm() utilizes this and it is very prevelent.
+Ordinary Least Squares (OLS), Generalized Linear Models (GLM) and MLE are related to each other.  To understand the relationship, I would add one more term, "Linear Regression".  OLS finds the estimator using linear regression parameters that are unbiased and chooses this by minimizing the sum of the squares.  It is fitting the existing data as well as it can on a line.  Because of this, OLS operates best when all of the data is available and interprets from that.  The function lm() utilizes this and it is very prevelent.
 
 GLMs, on the other hand, can use non-normal data which is important for binonmials, Poisson, and more options that we have used.  While it can handle normal data, it can also break away from the norm when needed by using MLE methodology as its regression parameter.  Unlike OLS, MLE is finding the parameter that maximizes the probability of matching the sample data.  The "link" inside of the glm() function defaults to "logit" for the advantages about using log likelihood that were discussed already.
 
-Linear Regression and OLS go together in the same way that GLM and MLE go together.  OLS and MLE are methods for fitting data best through linear modelling.  This relationship can be specifically seen in that if the actual data has a normal distribution around the mean, then mathmatically, MLE = OLS.  When data is not normal, it becomes important to understandthe differences between the two for choosing the methodology that will allow you to model the data best.
+Linear Regression and OLS go together in the same way that GLM and MLE go together.  OLS and MLE are methods for fitting data best through linear modeling.  This relationship can be specifically seen in that if the actual data has a normal distribution around the mean, then mathmatically, MLE = OLS.  When data is not normal, it becomes important to understand the differences between the two for choosing the methodology that will allow you to model the data best.
 
 
 
@@ -62,7 +61,7 @@ Linear Regression and OLS go together in the same way that GLM and MLE go togeth
 ### Problem 3 (20 points)
 **In this course we've discussed generalized linear models, time series analysis, the non-linear models.  In your own words and in less than a page describe how these three concepts are relate to one another?  If there is no relationship between these methods explain why they are not connected?**
 
-Generalized Linear Models (GLMs), Non-Linear Models (NLMs), and Time Series Models (TSMs) are forms of regression analysis that are related in that all three are developed to predict the probability of an event that occurred, as related to a dependent variable, was indeed significant and thus provides a better understanding of how the data of interest is behaving overall. This enhanced insight of the data’s behavior helps decision makers and/or end users to then forecast those events that are statistically proven to most likely occur – or not occur - in the future and hopefully improve the end state that is desired.
+Generalized Linear Models (GLMs), Non-Linear Models (NLMs), and Time Series Models (TSMs) are forms of regression analysis that are related in that all three are developed to predict the probability of an event that occurred, as related to a dependent variable, was indeed significant.  Thus, it provides a better understanding of how the data of interest is behaving overall. This enhanced insight of the data’s behavior helps decision makers and/or end users to then forecast those events that are statistically proven to most likely occur – or not occur - in the future and hopefully improve the end state that is desired.
 
 Additionally, all three models depend on a defined data structure to enable the possibility of fitting the output in the most appropriate way to be impactful. For GLMs, the structure includes linear predictors and a relationship between the mean and variance of the population; for NLMs, the structure includes determining the proper model to use and requires starting values – typically in the form of minimums or maximums – before transformation can occur; and for TSMs the data must be defined at fixed intervals and typically in a specific order prior to conducting analysis of any kind. 
 
@@ -83,10 +82,10 @@ help(Mroz) #help define the data
 summary(Mroz) #overview of the data
 sapply(Mroz, class) #see the variables classes
 ```
-There are 325 observations where married women were not in the labor force and 428 observations where they were.  The response in our model is going to be a factor of "yes" or "no" for lfp.  The data is quite tidy and does not have "NA" values that need to be worked around.  Now we need to build a non-linear model that can consider the variables and make a prediction about whether lfp will be "yes" or "no"
+There are 325 observations where married women were not in the labor force and 428 observations where they were.  The response in our model is going to be a factor of "yes" or "no" for lfp.  The data is quite tidy and does not have "NA" values that need to be worked around.  Wewe need to build a non-linear model that can consider the variables and make a prediction about whether lfp will be "yes" or "no"
 
 
-###Build and hone basic models
+####Build and hone basic models
 ```{r}
 ##start by looking at a linear model with a binomial response
 modLFP1 <- glm(lfp ~ k5 + k618 + age + wc + hc + lwg + inc, data = Mroz, family = binomial(link = "logit"))
@@ -158,8 +157,6 @@ These plots help to visualize the non-linear trends within the model by breaking
 -Age stays pretty  steady from 30 to 40 and then it starts to become less likely that the the married woman will participate in the workforce as their age increases
 -Lwg is hard to interpret but appears participatants in the survey with "average" levels of income potential were less likely to work.
 -Inc shows that as the family income increases, the likelyhood of participating in the workforce decreases.
-
-
 
 
 
@@ -285,8 +282,8 @@ apply(fitted(m3, outcome = FALSE), 2, mean)
 We will now try a multinomial logit model using the multinom() function
 
 ```{r}
-#m4 <- multinom(mode ~ price + catch + income, fish_long)
-#summary(m4)
+m4 <- multinom(mode ~ price + catch + income, fish_long)
+summary(m4)
 ```
 
 
