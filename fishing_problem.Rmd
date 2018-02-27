@@ -1,0 +1,269 @@
+---
+title: "Fishing"
+author: "BUDA 530 Team #4"
+date: '2018-02-25'
+output: html_document
+---
+In the `mlogit` package there is a data set called `Fishing`.  This data depicts a customer choice model of different recreational fishing choices.  This is based on price, how many fish are caught, and income. Create a model based on price, catch, and inocme, that tells me about a customers choice of mode.  Describe how you arrived at your model and any insights it provides.   
+
+```{r echo = FALSE, warning = FALSE, message = FALSE}
+#install.packages("mlogit")
+
+library(mlogit); library(tidyr); library(dplyr); library(stargazer); library(ggplot2)
+library(groupdata2) #for partitions and generate folds 
+library(corrplot) #for correlation plots
+library(nnet)
+
+```
+
+
+
+```{r}
+?Fishing
+
+data("Fishing")
+head(Fishing)
+```
+ 
+This problem requires us to classify the mode of recreational fishing given the predictor variables. We have 4 choices for modes of recreation fishing: beach, pier, boat and charter (the choice); 2 alternative variables: price and catch rate for each mode (the alternatives); and income which indicates each individual's monthly income.  
+
+We check the choices (response variable). Charter appears to be the preferred choice with the highest number of individuals. 
+```{r}
+#check the dependent variable
+table(Fishing$mode)
+```
+
+The data is in `wide` format; to use the mlogit function we first need to convert it into a `long` format
+```{r}
+fish_long <- mlogit.data(Fishing, shape = "wide", varying = 2:9, choice = "mode")
+head(fish_long, 20)
+```
+In the `long` format we see that individuals are labeled `chid` or choice ID and each individual has 4 choices of mode. The data varies by both individuals and the fishing mode. The income does not vary by individual. `mode` represents the choice actually made by the individual. 
+
+*Exploration of the data* 
+
+
+```{r}
+#summary of the fish_long data
+summary(fish_long)
+```
+
+```{r}
+#calculate proportion of mode choices 
+exp <- group_by(fish_long, mode, alt) %>% 
+        summarise(count = n()) %>% 
+        mutate(etotal = sum(count), proportion = count/etotal)
+
+#plot 
+ggplot(exp, aes(x = alt, y = proportion, group = mode, linetype = mode, col = mode)) + 
+        geom_line() + 
+        ylim(0, 0.4) +
+        ggtitle("Proportion of recreation mode, one of: beach, pier, boat and charter ") +
+        xlab("Choice") + ylab("Proportion")
+
+```
+
+  
+The actual choice made by an individual is given by the column `mode` as being TRUE, for example, the choice for individual `chid` 1 was `charter` and the choice for individual `chid` 3 was boat. From the plot we see that charter is the most chosen mode of recreational fishing with almost 40% of the total, followed by boat, pier and beach last with just over 10%. Conversely, we could have said that beach is the least selected alternative for recreational fishing, followed by pier, boat and charter and these correspond to the FALSE `mode`. 
+
+We can look at the price and catch rate distributions for each mode
+```{r}
+#density plot for price
+ggplot(fish_long, aes(x = price, col = alt)) + 
+        geom_density() + 
+        ggtitle("Price distribution for each mode choice") +
+        xlab("Price") + ylab("Density")
+
+#density plot for catch rate
+ggplot(fish_long, aes(x = catch, col = alt)) + 
+        geom_density() + 
+        ggtitle("Catch rate distribution for each mode choice") +
+        xlab("Catch rate") + ylab("Density")
+```
+  
+We can make some interesting observations from the price density plots: first, we see skewed distributions for all the options, and all options have about the same range of prices although one can find more cheaper options for boat and charter, which makes sense since these are the most popular options (as we saw from the proportion plot). 
+
+The catch rate density plots are less insightful but we can see that charter has the widest and the highest catch rate and it's a pretty uniform distribution. 
+
+There doesn't seem to be a correlation between price and catch rate and we can verify by looking at a correlation plot:
+```{r}
+#subset the numerical variables only 
+fish_num <- names(fish_long)[c(2, 4, 5)]
+fish_num <- subset(fish_long, select = fish_num)
+
+#calculate and plot correlations
+m <- cor(fish_num)
+corrplot(m, method = "number", type = "upper")
+```
+  
+As suspected, there isn't much correlation between price and catch rate but we see a strong correlation between price and income. 
+
+```{r}
+#plot income vs price
+ggplot(fish_long, aes(x = income, y = price, col = alt)) +
+        geom_point() +
+        geom_smooth() +
+        ggtitle("Income vs price of mode choice") +
+        xlab("Income") + ylab("Price")
+```
+  
+From the plot we can see that as individual income increases, individuals are willing to pay higher prices for the mode of recreation. Individuals are willing to pay the most for pier even though the catch rate for this choice is much lower compared to charter or beach. 
+
+```{r}
+filter(fish_long, mode == TRUE) %>% 
+        ggplot(aes(x = alt, y = income, col = alt)) + 
+        geom_boxplot() +
+        ggtitle("Income for each one of mode choices") +
+        xlab("Mode choice") + ylab("Income")
+```
+  
+Finaly we dont see a difference in income ranges for each of the mode choices.
+
+We next summarize some of the data: 
+```{r}
+filter(fish_long, mode == TRUE) %>% 
+        group_by(mode = alt) %>% 
+        summarise(count = n(), min_price = min(price), max_price = max(price), med_price = median(price), mean_income = mean(income)) 
+
+filter(fish_long, mode == TRUE) %>% 
+        group_by(mode = alt) %>% 
+        summarise(count = n(), min_catch = min(catch), max_catch = max(catch), med_catch = median(catch), mean_income = mean(income)) 
+```
+
+*Data analysis*
+
+We will first use the mlogit package to model multinomial logit models. 
+
+```{r}
+#start with the price and catch predictors and without the intercepts
+m <- mlogit(mode ~ price + catch | 0, fish_long)
+
+#model summary
+summary(m)
+```
+The coefficient for price is negative, meaning that as the cost of the choice goes up keeping the catch rate the same, the probability of selecting the mode goes down. The coefficient for catch is positive indicating that as the rate of catch goes up, with price remaining constant, the probability of selecting that mode goes up. 
+
+Both coefficients are significant with `p-value` being much smaller than 0.05
+
+We compare the frequencies of the actual alternatives with frequency of model estimates:
+```{r}
+#calculate and extract both frequencies
+freq_actual <- m$freq/sum(m$freq)
+freq_model <- apply(fitted(m, outcome=FALSE), 2, mean)
+
+#rbind
+rbind(freq_actual, freq_model)
+```
+The model predictions are somewhat off from the actual frequencies of mode. The model is correctly predicted that `boat` and `charter` are the most selected choices although the model predicts that `boat` is more popular than `charter` which is not the case for actuals.
+
+
+```{r}
+#calculate the ratio of coefficients 
+coef(m)["catch"]/coef(m)["price"]
+```
+The ratio of catch to price coefficient indicates that everything else being the same, individuals are willing to forgo 47% of the catch rate for a 1 unit reduction of mode price. This seems high. 
+
+We will add the intercepts to see if it changes the model results:
+
+```{r}
+#with the intercepts
+m1 <- mlogit(mode ~ price + catch, fish_long)
+
+#model summary
+summary(m1)
+```
+```{r}
+#calculate and extract both frequencies
+freq_model_m1 <- apply(fitted(m1, outcome=FALSE), 2, mean)
+
+#rbind
+rbind(freq_actual, freq_model_m1)
+```
+
+We see that the frequencies match exactly indicating an improvement to the model
+
+```{r}
+#calculate the ratio of coefficients 
+coef(m1)["catch"]/coef(m1)["price"]
+```
+The ratio of catch to price coefficient indicates that everything else being the same, individuals are willing to forgo 15% of the catch rate for a 1 unit reduction of mode price. This looks more reasonable than the previous estimate of 47%
+
+We will now add the income to the model. We will create 2 models: one with cost/income to model the fact that higher income individuals are less concerned with higher prices and vice-versa; and one with income effects on the alternatives 
+```{r}
+#model for cost/income 
+m2 <- mlogit(mode ~ price + catch + I(price/income), fish_long)
+summary(m2)
+```
+```{r}
+#model for income specific effects 
+m3 <- mlogit(mode ~ price + catch | income, fish_long)
+summary(m3)
+```
+
+The model with price/income was worse than our previous model where income was not taken into account even though the price/income is highly significant. The income specific model is an improvement and suggests that as income goes up the probability of boat choice goes up relative to the other alternatives. Also as income goes up the probability of the other choices goes down. The income terms are not significant indicating that monthly income doesn't have an effect on the choices of mode. This may be due to the fact that individuals may save portion of their income for recreational fishing regardless of how much monthly income they make. 
+
+We compare the models
+```{r}
+#likelihood test 
+lrtest(m3, m1)
+
+#Wald test 
+waldtest(m3, m1)
+
+#score test 
+scoretest(m3, m1)
+```
+All tests indicate that we should use the model with the income effect. 
+```{r}
+#convert the coefficients to odds 
+exp(coefficients(m3)[4:8])
+
+```
+* For one unit increase in income, the odds of selecting charter and pier go down and the odds of selecting boat over beach go up.  
+* For one unit increase in price, the odds of choosing a mode goes down by 0.98 assuming catch remains the same across all choices
+* And for one unit increase in catch rate, the odds of choosing a mode goes up by 1.43 assuming price remains the same across all choices
+
+
+```{r}
+#prediction vs actuals --- was unable to create a contingency matrix
+predictions <- predict(m3)
+actuals <- m3$freq/sum(m3$freq)
+
+rbind(predictions, actuals)
+```
+
+We will now try a multinomial logit model using the multinom() function. We will follow Faraday's procedure
+
+```{r}
+#fit the model using all the relevant predictors
+m4 <- multinom(alt ~ price + catch + income, fish_long)
+```
+
+We then use AIC to select which predictors add information to the model 
+```{r}
+#use the step function 
+m5 <- step(m4)
+```
+The step function suggests that keeping all predictors results in the best AIC model, indicating that all variables are significant
+
+```{r}
+#model summary
+summary(m4)
+```
+The summary output has the coefficients and the standard errors. The coefficients are being compared to the baseline alt = beach.  
+* A one unit increase in monthly income increases the log odds of choosing boat and charter over beach, but decreases the log odds of choosing pier over beach. The coefficients are quite small though which is consistent with our previous observation that income ranges are about the same for all mode choices
+* A one unit increase in price decreases the log odds of choosing beach over boat and charter and increases the log odds of selecting beach over pier - we saw in the density plots that pier prices remain higher than all other options for price > 150 so this result makes sense  
+* Catch rate has the highest coefficients and we can see why charter is the most popular choice since a one unit increase in catch rate increases the log odds of choosing charter over beach by 2 units  
+* We can infer from the model coefficients that catch rate is the biggest factor in selection of mode of recreational fishing, followed by price and then income. We previously saw that charter is the most popular mode and we can confirm from the model that the higher proportion of charter choice is significant
+
+We will now compare the predicted values from the model with the actuals 
+
+```{r}
+#prediction vs actuals 
+xtabs(~ predict(m4) + fish_long$alt)
+```
+```{r}
+#calculate the proportion of correct classifications 
+(281 + 696 + 657 + 522) / nrow(fish_long)
+```
+Only 46% of the data is correctly classified based on fitting the entire data set. Had we split the data into train and test subsets, we could expect the performance to be slightly worse since the model would be predicting new data. According to Faraday this performance is not unexpected when using multinomial logit models for classification problems. 
