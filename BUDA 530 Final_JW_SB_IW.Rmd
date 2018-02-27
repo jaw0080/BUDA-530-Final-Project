@@ -23,7 +23,7 @@ Ordinary Least Squares (OLS), Generalized Linear Models (GLM) and MLE are relate
 
 GLMs, on the other hand, can use non-normal data which is important for binonmials, Poisson, and more options that we have used.  While it can handle normal data, it can also break away from the norm when needed by using MLE methodology as its regression parameter.  Unlike OLS, MLE is finding the parameter that maximizes the probability of matching the sample data.  The "link" inside of the glm() function defaults to "logit" for the advantages about using log likelihood that were discussed already.
 
-Linear Regression and OLS go together in the same way that GLM and MLE go together.  OLS and MLE are methods for fitting data best through linear modeling.  This relationship can be specifically seen in that if the actual data has a normal distribution around the mean, then mathmatically, MLE = OLS.  When data is not normal, it becomes important to understand the differences between the two for choosing the methodology that will allow you to model the data best.
+Linear Regression and OLS go together in the same way that GLM and MLE go together. OLS and MLE are methods for fitting data best through linear modeling.  This relationship can be specifically seen in that if the actual data has a normal distribution around the mean, then mathmatically, MLE = OLS.  When data is not normal, it becomes important to understand the differences between the two for choosing the methodology that will allow you to model the data best.
 
 
 
@@ -46,15 +46,11 @@ Linear Regression and OLS go together in the same way that GLM and MLE go togeth
 ####Scenario 2  
 **Another stakeholder is interested in only defaults.  Since credit is offered to those who the company deems appropriate to offer credit to there is a certain "filter" on who will default.  Basically defaults become a "rare" occurrence, but we still want to be able to predict.  The data the company provides shows a 15% default rate, which they deem acceptable, but they want to see if they can identify contributory factors to defaults.  Prediction at an individual level is done through another means.  They want you to develop a statistical model that can identify the number of defaults that can occur in a specific month.  They also suggest there could be a time effect (month may matter) and number of defaults the previous month may matter as well.  Explain the model you would try to implement and why it makes sense.  How would you evaluate this model and method?  What are the issues that can arise with your approach?  How would you explain this to your client?**
 
-•	Two Phase Approach
-1)	Default / non-payment makes me think binomial regression and distribution model is the way to go. There are really only two possible outcomes of the variable (did the customer default on their payment or not?) based on the 6 independent variables mentioned in the scenario
-	We could run models and look at the Log Odds ratios to determine initial variability, then conduct inference and model testing to check the overall deviance levels
-	The end product would be an overall risk matrix that lists the dependent and independent variables, then shows a decision on whether we recommend issuing credit to a particular customer
-2)	Time Series Analysis
-	Utilize the ARMA model to look for default instances that may be one-time default occurrences, seasonality (e.g. somebody misses a payment during the holiday season), or other activity
-	Create an ARIMA model to determine if there is an overall trend in financial activities by customer to determine risk and utilize autocorrelation within that model 
-	The end product would be a confidence model that defines thresholds of risk based on what we see over time and recommends a go / no-go decision to the stakeholder
-	Reference financial data plot from TSAR document (pg. 7)
+A two-phase model utilizing binary logistic regression and time series analysis is implemented to evaluate credit offers and determine if potential customers are a risk to default on loans. This model is the best approach due to the dependent variable we are using for predicting only having two possible values – default or no default – as well as meeting the need to determine if seasonality impacts overall default volume.
+
+In constructing the first part of the model, data is randomized to remove any bias of the independent variables that have the potential to lead to a mislabeling of customers against one of the two default values. The model investigates the potential predictor variables available to the stakeholder such as income, employment history, and credit score amongst others. Scatterplot jittering models are created to provide evaluation as a graphical depiction of the relationship between the potential predictor variable and possibility of default. Next, the model is more fully developed utilizing the GLM function with a family value set equal to binomial to create the output for determining the probability of a customer defaulting on credit for each predictor variable as others are held constant. Lastly, a check of confidence intervals is conducted against t-tests to confirm significance of each variable investigated.
+
+The second part of the model, a scan function is used to import the data related to variables such as credit history, payment history, and current credit liability. Once imported, a time series is created that investigates the frequency of customer payments relative to their due date, overall credit score on a monthly basis, and their debt-to-income ratio on a monthly basis over a period of time determined by the financial institution (e.g. three years). Next, plots of the dataset and log function of the dataset provide a visual representation of quantity and occurrence of when defaults tend to happen most, to include on specific months of interest by the stakeholder. 
 
 
 
