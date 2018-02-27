@@ -232,7 +232,7 @@ actuals <- m3$freq/sum(m3$freq)
 rbind(predictions, actuals)
 ```
 
-We will now try a multinomial logit model using the multinom() function. We will follow Faraday's procedure
+We will now try a multinomial logit model using the multinom() function. We will follow Faraway's procedure
 
 ```{r}
 #fit the model using all the relevant predictors
@@ -266,4 +266,4 @@ xtabs(~ predict(m4) + fish_long$alt)
 #calculate the proportion of correct classifications 
 (281 + 696 + 657 + 522) / nrow(fish_long)
 ```
-Only 46% of the data is correctly classified based on fitting the entire data set. Had we split the data into train and test subsets, we could expect the performance to be slightly worse since the model would be predicting new data. According to Faraday this performance is not unexpected when using multinomial logit models for classification problems. 
+Only 46% of the data is correctly classified based on fitting the entire data set. Had we split the data into train and test subsets, we could expect the performance to be slightly worse since the model would be predicting new data. According to Faraway this performance is not unexpected when using multinomial logit models for classification problems. 
