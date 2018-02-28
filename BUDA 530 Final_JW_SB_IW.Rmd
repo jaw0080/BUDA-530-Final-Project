@@ -78,7 +78,7 @@ help(Mroz) #help define the data
 summary(Mroz) #overview of the data
 sapply(Mroz, class) #see the variables classes
 ```
-There are 325 observations where married women were not in the labor force and 428 observations where they were.  The response in our model is going to be a factor of "yes" or "no" for lfp.  The data is quite tidy and does not have "NA" values that need to be worked around.  Wewe need to build a non-linear model that can consider the variables and make a prediction about whether lfp will be "yes" or "no"
+There are 325 observations where married women were not in the labor force and 428 observations where they were.  The response in our model is going to be a factor of "yes" or "no" for lfp.  The data is quite tidy and does not have "NA" values that need to be worked around.  We need to build a non-linear model that can consider the variables and make a prediction about whether lfp will be "yes" or "no"
 
 
 ####Build and hone basic models
