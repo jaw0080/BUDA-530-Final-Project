@@ -73,25 +73,23 @@ help(Mroz) #help define the data
 summary(Mroz) #overview of the data
 sapply(Mroz, class) #see the variables classes
 ```
-There are 325 observations where married women were not in the labor force and 428 observations where they were.  The response in our model is going to be a factor of "yes" or "no" for lfp.  The data is quite tidy and does not have "NA" values that need to be worked around.  We need to build a non-linear model that can consider the variables and make a prediction about whether lfp will be "yes" or "no"
+There are 325 observations where married women were not in the labor force and 428 observations where they were.  The response in our model is going to be a factor of "yes" or "no" for lfp.  The data is quite tidy and does not have "NA" values that need to be worked around.  We need to build a non-linear model that can consider the variables and make a prediction about whether lfp will be "yes" or "no".
 
 
 ####Build and hone basic models
 ```{r}
-##start by looking at a linear model with a binomial response
+##Start by looking at a linear model with a binomial response.
 modLFP1 <- glm(lfp ~ k5 + k618 + age + wc + hc + lwg + inc, data = Mroz, family = binomial(link = "logit"))
 
-#now the non-linear, starting with polynomials:
-##I tried all of the numeric values to different degrees of polynomials and used AIC to judge fit.  The model below has the best polynomial results that I could put together
+#Create the non-linear model, starting with polynomials:
+##I tried all of the numeric values to different degrees of polynomials and used AIC to determine best fit.  The model below has the best polynomial results that I could put together.
 modLFP2 <- glm(lfp ~ poly(k5,1,raw=FALSE) + poly(k618,1,raw=FALSE) + poly(age,1,raw=FALSE) + wc + hc + poly(lwg,2,raw=FALSE) + poly(inc,2,raw=FALSE), data = Mroz, family = binomial(link = "logit"))
 
-#now compare each variable with a spline instead to see what can be improved.  Overall the splines improved the fit from the linear model, but not quite as well as the polynomial did.  One again, many variations of the split model below were tried before choosing this one.
+#Compare each variable with a spline instead to see what can be improved.  Overall the splines improved the fit from the linear model, but not quite as well as the polynomial did.  One again, many variations of the split model below were tried before choosing this one.
 modLFP3 <- glm(lfp ~ k5 + k618 + age + wc + hc + bs(lwg, knots =1)  + bs(inc,knots = c(25,50,75)), data = Mroz, family = binomial(link = "logit"))
 
-#create a GAM.  By adjusting the values of this and reviewing the AIC, the model below fit best.
+#Create a GAM.  By adjusting the values of this and reviewing the AIC, the model below fit best.
 modLFP4 <- gam(lfp ~ k5 + k618 + s(age) + wc + hc + s(lwg) + s(inc), data = Mroz, family = binomial(link = "logit"))
-
-
 
 AIC(modLFP1,modLFP2, modLFP3, modLFP4)
 summary(modLFP4)
@@ -103,17 +101,15 @@ Predict using the model and review how well it predicts the lfp.
 predLFP <-predict(modLFP4,type="response", newdata=Mroz)
 predLFP1 <- ifelse(predLFP>=0.5, "Yes", "No")
 
-table(predLFP1) #what the model predicts
-table(predLFP1,Mroz$lfp) #This will show how many times the model predicted right against the actual data.
+table(predLFP1) #What the model predicts
+table(predLFP1,Mroz$lfp) #This will show how many times the model predicted corrrectly against the actual data.
 
-correctPreds <- as.numeric(length(predLFP1)) - (sum(table(predLFP1,Mroz$lfp))-sum(diag(table(predLFP1,Mroz$lfp)))) #How many predictions are correct
+correctPreds <- as.numeric(length(predLFP1)) - (sum(table(predLFP1,Mroz$lfp))-sum(diag(table(predLFP1,Mroz$lfp)))) #How many predictions are correct.
 print(correctPreds)
-
 print(correctPreds / length(predLFP1)) 
-
 ```
 
-The model that we fit was able to predict 571 out of the 753 times (75%) correctly whether a married woman within this survey would be part of the labor force.  From the summary, it is important to review the coefficients of the variables.  K618 (how many children 6-18 years old) and whether or not either gender went to college was not found to be significant within the model.  K5 (how many children 5 years old or younger) was significant in the model with a linear trend interfering the higher number of children in this age bracket make it less likely for a woman to be in the workforce.
+The model that we fit was able to correctly predict 571 out of the 753 times (75%) whether a married woman within this survey would be part of the labor force.  From the summary, it is important to review the coefficients of the variables.  K618 (how many children aged 6-18 years old) and whether or not either gender went to college was not found to be significant within the model.  K5 (how many children aged 5 years old or younger) was significant in the model with a linear trend interfering the higher number of children in this age bracket. This makes it less likely for a woman to be in the workforce.
 
 Age, lwg, and income were significant as well, but these trends were non-linear and so they lose simple interpretability.  To compensate for this, they are plotted individually below, but using the GAM of the model.
 
@@ -128,13 +124,11 @@ plot(predLFP~age,data = Mroz)
 x <-seq(30,60,1)
 lines(x,ilogit(predict(modLFPAge,newdata=data.frame(age=x))),col=2)
 
-
 #Plot model for lwg
 modLFPLwg <- gam(lfp ~ s(lwg), data = Mroz, family = binomial(link = "logit"))
 plot(predLFP~lwg,data = Mroz)
 x <-seq(0,2.4,0.1)
 lines(x,ilogit(predict(modLFPLwg,newdata=data.frame(lwg=x))),col=2)
-
 
 #Plot model for inc
 modLFPInc <- gam(lfp ~ s(inc), data = Mroz, family = binomial(link = "logit"))
@@ -143,17 +137,14 @@ x <-seq(0,60,1) #not using full data range as it becomes too sparse
 lines(x,ilogit(predict(modLFPInc,newdata=data.frame(inc=x))),col=2)
 ```
 
-
-These plots help to visualize the non-linear trends within the model by breaking down the response trend based on a single variable.
--Age stays pretty  steady from 30 to 40 and then it starts to become less likely that the the married woman will participate in the workforce as their age increases
+These plots help to visualize the non-linear trends within the model by breaking down the response trend based on a single variable. Findings include:
+-Age stays pretty steady from 30 to 40 and then it starts to become less likely that the the married woman will participate in the workforce as their age increases.
 -Lwg is hard to interpret but appears participatants in the survey with "average" levels of income potential were less likely to work.
--Inc shows that as the family income increases, the likelyhood of participating in the workforce decreases.
-
-
+-Inc shows that as the family income increases, the likelihood of a woman participating in the workforce decreases.
 
 
 ### Problem 5 (20 points)
-**In the `mlogit` package there is a data set called `Fishing`.  This data depicts a customer choice model of different recreational fishing choices.  This is based on price, how many fish are caught, and income.   Create a model based on price, catch, and inocme, that tells me about a customers choice of mode.  Describe how you arrived at your model and any insights it provides.**
+**In the `mlogit` package there is a data set called `Fishing`.  This data depicts a customer choice model of different recreational fishing choices.  This is based on price, how many fish are caught, and income. Create a model based on price, catch, and inocme, that tells me about a customers choice of mode. Describe how you arrived at your model and any insights it provides.**
 
 ```{r echo = FALSE, warning = FALSE, message = FALSE}
 #install.packages("mlogit")
@@ -161,10 +152,9 @@ These plots help to visualize the non-linear trends within the model by breaking
 #install.packages("corrplot")
 
 library(mlogit); library(tidyr); library(dplyr); library(stargazer); library(ggplot2)
-library(groupdata2) #for partitions and generate folds 
+library(groupdata2) #for partitions and to generate folds 
 library(corrplot) #for correlation plots
 library(nnet)
-
 ```
 
 
@@ -177,7 +167,8 @@ head(Fishing)
  
 This problem requires us to classify the mode of recreational fishing given the predictor variables. We have 4 choices for modes of recreation fishing: beach, pier, boat and charter (the choice); 2 alternative variables: price and catch rate for each mode (the alternatives); and income which indicates each individual's monthly income.  
 
-We check the choices (response variable). Charter appears to be the preferred choice with the highest number of individuals. 
+We check the choices (response variable), and a charter trip appears to be the preferred choice with the highest number of individuals. 
+
 ```{r}
 #check the dependent variable
 table(Fishing$mode)
@@ -191,8 +182,6 @@ head(fish_long, 20)
 In the `long` format we see that individuals are labeled `chid` or choice ID and each individual has 4 choices of mode. The data varies by both individuals and the fishing mode. The income does not vary by individual. `mode` represents the choice actually made by the individual. 
 
 *Exploration of the data* 
-
-
 ```{r}
 #summary of the fish_long data
 summary(fish_long)
@@ -210,13 +199,11 @@ ggplot(exp, aes(x = alt, y = proportion, group = mode, linetype = mode, col = mo
         ylim(0, 0.4) +
         ggtitle("Proportion of recreation mode, one of: beach, pier, boat and charter ") +
         xlab("Choice") + ylab("Proportion")
-
 ```
 
-  
 The actual choice made by an individual is given by the column `mode` as being TRUE, for example, the choice for individual `chid` 1 was `charter` and the choice for individual `chid` 3 was boat. From the plot we see that charter is the most chosen mode of recreational fishing with almost 40% of the total, followed by boat, pier and beach last with just over 10%. Conversely, we could have said that beach is the least selected alternative for recreational fishing, followed by pier, boat and charter and these correspond to the FALSE `mode`. 
 
-We can look at the price and catch rate distributions for each mode
+We can now look at the price and catch rate distributions for each mode.
 ```{r}
 #density plot for price
 ggplot(fish_long, aes(x = price, col = alt)) + 
@@ -257,7 +244,7 @@ ggplot(fish_long, aes(x = income, y = price, col = alt)) +
         xlab("Income") + ylab("Price")
 ```
   
-From the plot we can see that as individual income increases, individuals are willing to pay higher prices for the mode of recreation. Individuals are willing to pay the most for pier even though the catch rate for this choice is much lower compared to charter or beach. 
+From the plot we can see that as individual income increases, individuals are willing to pay higher prices for the mode of recreation. Individuals are willing to pay the most for the pier option even though the catch rate for this choice is much lower compared to charter or beach. 
 
 ```{r}
 filter(fish_long, mode == TRUE) %>% 
@@ -267,7 +254,7 @@ filter(fish_long, mode == TRUE) %>%
         xlab("Mode choice") + ylab("Income")
 ```
   
-Finaly we dont see a difference in income ranges for each of the mode choices.
+Finaly we do not see a difference in income ranges for each of the mode choices.
 
 We next summarize some of the data: 
 ```{r}
@@ -280,10 +267,9 @@ filter(fish_long, mode == TRUE) %>%
         summarise(count = n(), min_catch = min(catch), max_catch = max(catch), med_catch = median(catch), mean_income = mean(income)) 
 ```
 
-####Data analysis
+####Data Analysis
 
-We will first use the mlogit package to model multinomial logit models. 
-
+We will first use the mlogit package to model multinomial logit models:
 ```{r}
 #start with the price and catch predictors and without the intercepts
 m <- mlogit(mode ~ price + catch | 0, fish_long)
@@ -306,7 +292,6 @@ rbind(freq_actual, freq_model)
 ```
 The model predictions are somewhat off from the actual frequencies of mode. The model is correctly predicted that `boat` and `charter` are the most selected choices although the model predicts that `boat` is more popular than `charter` which is not the case for actuals.
 
-
 ```{r}
 #calculate the ratio of coefficients 
 coef(m)["catch"]/coef(m)["price"]
@@ -314,7 +299,6 @@ coef(m)["catch"]/coef(m)["price"]
 The ratio of catch to price coefficient indicates that everything else being the same, individuals are willing to forgo 47% of the catch rate for a 1 unit reduction of mode price. This seems high. 
 
 We will add the intercepts to see if it changes the model results:
-
 ```{r}
 #with the intercepts
 m1 <- mlogit(mode ~ price + catch, fish_long)
@@ -330,15 +314,15 @@ freq_model_m1 <- apply(fitted(m1, outcome=FALSE), 2, mean)
 rbind(freq_actual, freq_model_m1)
 ```
 
-We see that the frequencies match exactly indicating an improvement to the model
+We see that the frequencies match exactly indicating an improvement to the model.
 
 ```{r}
 #calculate the ratio of coefficients 
 coef(m1)["catch"]/coef(m1)["price"]
 ```
-The ratio of catch to price coefficient indicates that everything else being the same, individuals are willing to forgo 15% of the catch rate for a 1 unit reduction of mode price. This looks more reasonable than the previous estimate of 47%
+The ratio of catch to price coefficient indicates that everything else being the same, individuals are willing to forgo 15% of the catch rate for a 1 unit reduction of mode price. This looks more reasonable than the previous estimate of 47%.
 
-We will now add the income to the model. We will create 2 models: one with cost/income to model the fact that higher income individuals are less concerned with higher prices and vice-versa; and one with income effects on the alternatives 
+We will now add the income to the model. We will create 2 models: one with cost/income to model the fact that higher income individuals are less concerned with higher prices and vice-versa; and one with income effects on the alternatives. 
 ```{r}
 #model for cost/income 
 m2 <- mlogit(mode ~ price + catch + I(price/income), fish_long)
@@ -350,9 +334,9 @@ m3 <- mlogit(mode ~ price + catch | income, fish_long)
 summary(m3)
 ```
 
-The model with price/income was worse than our previous model where income was not taken into account even though the price/income is highly significant. The income specific model is an improvement and suggests that as income goes up the probability of boat choice goes up relative to the other alternatives. Also as income goes up the probability of the other choices goes down. The income terms are not significant indicating that monthly income doesn't have an effect on the choices of mode. This may be due to the fact that individuals may save portion of their income for recreational fishing regardless of how much monthly income they make. 
+The model with price/income was worse than our previous model where income was not taken into account even though the price/income is highly significant. The income specific model is an improvement and suggests that as income goes up the probability of boat choice goes up relative to the other alternatives. Also as income goes up the probability of the other choices goes down. The income terms are not significant indicating that monthly income doesn't have an effect on the choices of mode. This may be due to the fact that individuals may save a portion of their income for recreational fishing regardless of how much monthly income they make. 
 
-We compare the models
+We compare the models:
 ```{r}
 #likelihood test 
 lrtest(m3, m1)
@@ -367,12 +351,10 @@ All tests indicate that we should use the model with the income effect.
 ```{r}
 #convert the coefficients to odds 
 exp(coefficients(m3)[4:8])
-
 ```
 * For one unit increase in income, the odds of selecting charter and pier go down and the odds of selecting boat over beach go up.  
 * For one unit increase in price, the odds of choosing a mode goes down by 0.98 assuming catch remains the same across all choices
 * And for one unit increase in catch rate, the odds of choosing a mode goes up by 1.43 assuming price remains the same across all choices
-
 
 ```{r}
 #prediction vs actuals --- was unable to create a contingency matrix
@@ -382,32 +364,30 @@ actuals <- m3$freq/sum(m3$freq)
 rbind(predictions, actuals)
 ```
 
-We will now try a multinomial logit model using the multinom() function. We will follow Faraway's procedure
-
+We will now try a multinomial logit model using the multinom() function. We will follow Faraway's procedure:
 ```{r}
 #fit the model using all the relevant predictors
 m4 <- multinom(alt ~ price + catch + income, fish_long)
 ```
 
-We then use AIC to select which predictors add information to the model 
+We then use AIC to select which predictors add information to the model:
 ```{r}
 #use the step function 
 m5 <- step(m4)
 ```
-The step function suggests that keeping all predictors results in the best AIC model, indicating that all variables are significant
+The step function suggests that keeping all predictors results in the best AIC model, indicating that all variables are significant.
 
 ```{r}
 #model summary
 summary(m4)
 ```
 The summary output has the coefficients and the standard errors. The coefficients are being compared to the baseline alt = beach.  
-* A one unit increase in monthly income increases the log odds of choosing boat and charter over beach, but decreases the log odds of choosing pier over beach. The coefficients are quite small though which is consistent with our previous observation that income ranges are about the same for all mode choices
-* A one unit increase in price decreases the log odds of choosing beach over boat and charter and increases the log odds of selecting beach over pier - we saw in the density plots that pier prices remain higher than all other options for price > 150 so this result makes sense  
-* Catch rate has the highest coefficients and we can see why charter is the most popular choice since a one unit increase in catch rate increases the log odds of choosing charter over beach by 2 units  
-* We can infer from the model coefficients that catch rate is the biggest factor in selection of mode of recreational fishing, followed by price and then income. We previously saw that charter is the most popular mode and we can confirm from the model that the higher proportion of charter choice is significant
+* A one unit increase in monthly income increases the log odds of choosing boat and charter over beach, but decreases the log odds of choosing pier over beach. The coefficients are quite small though which is consistent with our previous observation that income ranges are about the same for all mode choices.
+* A one unit increase in price decreases the log odds of choosing beach over boat and charter and increases the log odds of selecting beach over pier - we saw in the density plots that pier prices remain higher than all other options for price greater than $150 so this result makes sense.  
+* Catch rate has the highest coefficients and we can see why charter is the most popular choice since a one unit increase in catch rate increases the log odds of choosing charter over beach by 2 units.  
+* We can infer from the model coefficients that catch rate is the biggest factor in selection of mode of recreational fishing, followed by price and then income. We previously saw that charter is the most popular mode and we can confirm from the model that the higher proportion of charter choice is significant.
 
-We will now compare the predicted values from the model with the actuals 
-
+We will now compare the predicted values from the model with the actuals:
 ```{r}
 #prediction vs actuals 
 xtabs(~ predict(m4) + fish_long$alt)
@@ -416,6 +396,4 @@ xtabs(~ predict(m4) + fish_long$alt)
 #calculate the proportion of correct classifications 
 (281 + 696 + 657 + 522) / nrow(fish_long)
 ```
-Only 46% of the data is correctly classified based on fitting the entire data set. Had we split the data into train and test subsets, we could expect the performance to be slightly worse since the model would be predicting new data. According to Faraway this performance is not unexpected when using multinomial logit models for classification problems. 
-
-
+Only 46% of the data is correctly classified based on fitting the entire data set. Had we split the data into training and testing subsets, we could expect the performance to be slightly worse since the model would be predicting new data. According to Faraway this performance is not unexpected when using multinomial logit models for classification problems. 
